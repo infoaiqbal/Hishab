@@ -1,10 +1,10 @@
 {
-  "name": "Hishab Calculator",
-  "short_name": "Hishab",
+  "name": "আয় ব্যয় - Asifio",
+  "short_name": "আয় ব্যয়",
   "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#121212",
-  "theme_color": "#bb86fc",
+  "background_color": "#000000",
+  "theme_color": "#6c5ce7",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/2344/2344132.png",

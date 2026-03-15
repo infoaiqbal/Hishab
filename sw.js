@@ -1,16 +1,10 @@
-const cacheName = 'hishab-v4'; // ভার্সন পরিবর্তন করা হলো
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(cacheName).then((cache) => {
-      return cache.addAll(['index.html', 'style.css', 'script.js', 'manifest.json']);
-    })
-  );
+const cacheName = 'asifio-v1';
+const assets = ['./', './index.html', './style.css', './script.js'];
+
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(cacheName).then(cache => cache.addAll(assets)));
 });
 
-self.addEventListener('fetch', (e) => {
-  e.respondWith(
-    caches.match(e.request).then((response) => {
-      return response || fetch(e.request);
-    })
-  );
+self.addEventListener('fetch', e => {
+  e.respondWith(caches.match(e.request).then(res => res || fetch(e.request)));
 });
