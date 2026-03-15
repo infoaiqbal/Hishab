@@ -3,62 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hishab - All in One</title>
+    <title>Hishab - Expense Tracker</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
 </head>
 <body class="Dark-Asifio">
-    <div class="calculator-container">
+    <div class="app-container">
         <div class="header">
-            <div class="nav-tabs">
-                <button onclick="showSection('calc')" id="calc-btn" class="active-tab">Calc</button>
-                <button onclick="showSection('conv')" id="conv-btn">Conv</button>
-            </div>
+            <h3>আয়-ব্যয় হিসাব</h3>
             <button id="theme-toggle" onclick="toggleTheme()">
                 <svg id="light-icon" class='line' viewBox='0 0 24 24' style="display: none;"><path d='M12 18.5C15.5899 18.5 18.5 15.5899 18.5 12C18.5 8.41015 15.5899 5.5 12 5.5C8.41015 5.5 5.5 8.41015 5.5 12C5.5 15.5899 8.41015 18.5 12 18.5Z'></path><path d='M19.14 19.14L19.01 19.01M19.01 4.99L19.14 4.86L19.01 4.99ZM4.86 19.14L4.99 19.01L4.86 19.14ZM12 2.08V2V2.08ZM12 22V21.92V22ZM2.08 12H2H2.08ZM22 12H21.92H22ZM4.99 4.99L4.86 4.86L4.99 4.99Z'></path></svg>
                 <svg id="dark-icon" class='line' viewBox='0 0 24 24'><path d='M2.03009 12.42C2.39009 17.57 6.76009 21.76 11.9901 21.99C15.6801 22.15 18.9801 20.43 20.9601 17.72C21.7801 16.61 21.3401 15.87 19.9701 16.12C19.3001 16.24 18.6101 16.24 17.8901 16.26C13.0001 16.06 9.00009 11.97 8.98009 7.13996C8.97009 5.83996 9.24009 4.60996 9.73009 3.48996C10.2701 2.24996 9.62009 1.65996 8.37009 2.18996C4.41009 3.85996 1.70009 7.84996 2.03009 12.42Z'></path></svg>
             </button>
         </div>
 
-        <div id="calculator-section">
-            <input type="text" id="display" disabled placeholder="0">
-            <div class="buttons">
-                <button class="btn-clear" onclick="clearDisplay()">C</button>
-                <button onclick="appendToDisplay('/')">/</button>
-                <button onclick="appendToDisplay('*')">×</button>
-                <button onclick="deleteLast()">DEL</button>
-                <button onclick="appendToDisplay('7')">7</button>
-                <button onclick="appendToDisplay('8')">8</button>
-                <button onclick="appendToDisplay('9')">9</button>
-                <button onclick="appendToDisplay('-')">-</button>
-                <button onclick="appendToDisplay('4')">4</button>
-                <button onclick="appendToDisplay('5')">5</button>
-                <button onclick="appendToDisplay('6')">6</button>
-                <button onclick="appendToDisplay('+')">+</button>
-                <button onclick="appendToDisplay('1')">1</button>
-                <button onclick="appendToDisplay('2')">2</button>
-                <button onclick="appendToDisplay('3')">3</button>
-                <button class="btn-equal" onclick="calculate()">=</button>
-                <button onclick="appendToDisplay('0')" style="grid-column: span 2;">0</button>
-                <button onclick="appendToDisplay('.')">.</button>
+        <div class="balance-card">
+            <p>বর্তমান ব্যালেন্স</p>
+            <h1 id="total-balance">৳ 0</h1>
+        </div>
+
+        <div class="input-section">
+            <input type="text" id="reason" placeholder="কী বাবদ? (যেমন: প্যান্ট, জুতা)">
+            <input type="number" id="amount" placeholder="টাকার পরিমাণ">
+            <div class="btn-group">
+                <button onclick="addTransaction('income')" class="btn-in">আয় (+)</button>
+                <button onclick="addTransaction('expense')" class="btn-out">ব্যয় (-)</button>
             </div>
         </div>
 
-        <div id="converter-section" style="display: none;">
-            <div class="conv-container">
-                <select id="conv-type" onchange="updateUnits()">
-                    <option value="length">Length (KM to Mile)</option>
-                    <option value="weight">Weight (KG to LB)</option>
-                    <option value="temp">Temp (C to F)</option>
-                </select>
-                <input type="number" id="conv-input" placeholder="Input Value" oninput="convert()">
-                <div class="conv-result">
-                    <span id="result-text">Result: 0</span>
-                </div>
-            </div>
+        <div class="history-section">
+            <h4>সাম্প্রতিক লেনদেন</h4>
+            <ul id="history-list"></ul>
         </div>
     </div>
-
     <script src="script.js"></script>
     <script>
         if ('serviceWorker' in navigator) {

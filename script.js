@@ -1,57 +1,69 @@
-const display = document.getElementById('display');
 const body = document.body;
 const darkIcon = document.getElementById('dark-icon');
 const lightIcon = document.getElementById('light-icon');
+const historyList = document.getElementById('history-list');
+const balanceDisplay = document.getElementById('total-balance');
 
-// Calculator Functions
-function appendToDisplay(input) { display.value += input; }
-function clearDisplay() { display.value = ""; }
-function deleteLast() { display.value = display.value.slice(0, -1); }
-function calculate() {
-    try { display.value = eval(display.value); }
-    catch (e) { display.value = "Error"; }
-}
+let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
 
-// Tab Switching Logic
-function showSection(section) {
-    const calcSec = document.getElementById('calculator-section');
-    const convSec = document.getElementById('converter-section');
-    const calcBtn = document.getElementById('calc-btn');
-    const convBtn = document.getElementById('conv-btn');
+function addTransaction(type) {
+    const reason = document.getElementById('reason').value;
+    const amount = parseFloat(document.getElementById('amount').value);
 
-    if (section === 'calc') {
-        calcSec.style.display = 'block';
-        convSec.style.display = 'none';
-        calcBtn.classList.add('active-tab');
-        convBtn.classList.remove('active-tab');
-    } else {
-        calcSec.style.display = 'none';
-        convSec.style.display = 'block';
-        convBtn.classList.add('active-tab');
-        calcBtn.classList.remove('active-tab');
+    if (!reason || isNaN(amount)) {
+        alert("সঠিক তথ্য দিন!");
+        return;
     }
+
+    const transaction = {
+        id: Date.now(),
+        reason,
+        amount: type === 'income' ? amount : -amount,
+        type
+    };
+
+    transactions.push(transaction);
+    saveAndRender();
+    document.getElementById('reason').value = '';
+    document.getElementById('amount').value = '';
 }
 
-// Unit Converter Logic
-function convert() {
-    const type = document.getElementById('conv-type').value;
-    const val = parseFloat(document.getElementById('conv-input').value);
-    const resText = document.getElementById('result-text');
-
-    if (isNaN(val)) { resText.innerText = "Result: 0"; return; }
-
-    let result = 0;
-    if (type === 'length') {
-        result = (val * 0.621371).toFixed(2) + " Miles";
-    } else if (type === 'weight') {
-        result = (val * 2.20462).toFixed(2) + " Lbs";
-    } else if (type === 'temp') {
-        result = ((val * 9/5) + 32).toFixed(2) + " °F";
-    }
-    resText.innerText = "Result: " + result;
+function deleteTransaction(id) {
+    transactions = transactions.filter(t => t.id !== id);
+    saveAndRender();
 }
 
-// Theme Toggle with Persistence
+function saveAndRender() {
+    localStorage.setItem('transactions', JSON.stringify(transactions));
+    render();
+}
+
+function render() {
+    historyList.innerHTML = '';
+    let total = 0;
+
+    transactions.slice().reverse().forEach(t => {
+        total += t.amount;
+        const li = document.createElement('li');
+        li.className = t.type === 'income' ? 'item-in' : 'item-out';
+        li.innerHTML = `
+            <div>
+                <strong>${t.reason}</strong><br>
+                <small>${new Date(t.id).toLocaleDateString()}</small>
+            </div>
+            <div style="display:flex; align-items:center;">
+                <span style="color: ${t.type === 'income' ? 'var(--in-color)' : 'var(--out-color)'}">
+                    ${t.amount > 0 ? '+' : ''}${t.amount}
+                </span>
+                <button class="delete-btn" onclick="deleteTransaction(${t.id})">×</button>
+            </div>
+        `;
+        historyList.appendChild(li);
+    });
+
+    balanceDisplay.innerText = `৳ ${total}`;
+}
+
 function toggleTheme() {
     if (body.classList.contains('Dark-Asifio')) {
         body.classList.remove('Dark-Asifio');
@@ -73,4 +85,5 @@ window.onload = () => {
         body.classList.add('Dark-Asifio');
         darkIcon.style.display = 'none'; lightIcon.style.display = 'block';
     }
+    render();
 };

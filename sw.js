@@ -1,4 +1,4 @@
-const cacheName = 'hishab-v2'; // ভার্সন পরিবর্তন করা হলো
+const cacheName = 'hishab-v4'; // ভার্সন পরিবর্তন করা হলো
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(cacheName).then((cache) => {
