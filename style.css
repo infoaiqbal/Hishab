@@ -11,6 +11,7 @@
     --drawer-bg: #ffffff;
     --side-margin: 18px; 
     --filter-bg: #e9ecef;
+    --bg-card: #ffffff;
 }
 
 .Dark-Asifio {
@@ -20,6 +21,7 @@
     --accent: #a29bfe;
     --drawer-bg: #1c1c1e;
     --filter-bg: #2c2c2e;
+    --bg-card: #1c1c1e;
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -41,12 +43,26 @@ body {
     margin: 0 auto;
 }
 
-.header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
 .menu-btn { background: none; border: none; padding: 0; cursor: pointer; color: var(--text); }
 .menu-btn svg { width: 26px; height: 26px; stroke: currentColor; stroke-width: 2.5; fill: none; }
 
 .user-name-area { display: flex; align-items: center; gap: 8px; cursor: pointer; }
 .edit-icon { width: 16px; height: 16px; stroke: var(--accent); fill: none; stroke-width: 2.5; }
+
+/* Auth Header Styles */
+#auth-container { position: relative; }
+#user-trigger { transition: transform 0.2s; }
+#user-trigger:active { transform: scale(0.9); }
+
+#auth-box {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 
 .balance-card {
     background: linear-gradient(135deg, var(--accent), #4834d4);
@@ -115,41 +131,5 @@ li {
 .modal-content input {
     width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px;
     border: 1px solid rgba(128,128,128,0.2); background: var(--bg); color: var(--text); font-family: inherit;
-}
-/* Login Profile Styles */
-#user-profile {
-    background: var(--filter-bg);
-    border-radius: 12px;
-    padding: 12px;
-    margin: 10px;
-    display: none; 
-    align-items: center;
-    gap: 12px;
-}
-
-#user-photo {
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    border: 2px solid var(--accent);
-    object-fit: cover;
-}
-
-#user-name-display {
-    font-weight: 600;
-    font-size: 0.95rem;
-    color: var(--text);
-}
-
-#login-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    transition: 0.3s;
-}
-
-#login-btn:active {
-    transform: scale(0.95);
-    opacity: 0.9;
+    outline: none;
 }

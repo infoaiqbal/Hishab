@@ -20,24 +20,44 @@ let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
 let trash = JSON.parse(localStorage.getItem('trash')) || [];
 let currentFilter = 'all';
 
-// ২. লগইন এবং সিঙ্ক্রোনাইজেশন লজিক
+// ২. উন্নত লগইন ও সিঙ্ক্রোনাইজেশন লজিক
+function toggleAuthBox() {
+    const box = document.getElementById('auth-box');
+    box.style.display = box.style.display === 'none' ? 'block' : 'none';
+}
+
+function confirmLogin() {
+    const choice = confirm("লগইন করলে আপনার তথ্য অনলাইনে সিঙ্ক হবে। যদি অনলাইনে আগে থেকে অন্য ডাটা থাকে তবে আপনার বর্তমান ডাটা হারাতে পারেন।\n\nসুরক্ষার জন্য ব্যাকআপ নিতে চান? (নিব = OK, নিব না = Cancel)");
+    if (choice) {
+        exportData();
+        setTimeout(() => googleLogin(), 2000);
+    } else {
+        googleLogin();
+    }
+}
+
 function googleLogin() {
     const provider = new firebase.auth.GoogleAuthProvider();
     auth.signInWithPopup(provider).then((result) => {
         syncWithCloud(result.user);
+        document.getElementById('auth-box').style.display = 'none';
     }).catch((error) => { alert("লগইন ব্যর্থ হয়েছে!"); });
 }
 
 function logout() {
-    if(confirm("লগআউট করতে চান?")) {
-        auth.signOut().then(() => { window.location.reload(); });
+    if(confirm("লগআউট করতে চান? লগআউট করলে ফোন থেকে বর্তমান ডাটা মুছে যাবে।")) {
+        auth.signOut().then(() => {
+            localStorage.clear();
+            transactions = [];
+            trash = [];
+            window.location.reload();
+        });
     }
 }
 
 function syncWithCloud(user) {
     if (!user) return;
     const userRef = db.ref("users/" + user.uid);
-    
     userRef.once("value", (snapshot) => {
         if (snapshot.exists()) {
             const cloudData = snapshot.val();
@@ -46,27 +66,41 @@ function syncWithCloud(user) {
                 trash = cloudData.trash || [];
                 saveAndRender();
             }
+        } else {
+            saveAndRender(); // নতুন ইউজার হলে বর্তমান ডাটা ক্লাউডে যাবে
         }
         updateAuthUI(user);
     });
 }
 
 function updateAuthUI(user) {
-    const loginBtn = document.getElementById('login-btn');
-    const profile = document.getElementById('user-profile');
+    const defaultIcon = document.getElementById('default-user-icon');
+    const headerImg = document.getElementById('user-img-header');
+    const authBox = document.getElementById('auth-box');
+    
     if (user) {
-        if(loginBtn) loginBtn.style.display = 'none';
-        if(profile) profile.style.display = 'flex';
-        document.getElementById('user-photo').src = user.photoURL;
-        document.getElementById('user-name-display').innerText = user.displayName;
+        if(defaultIcon) defaultIcon.style.display = 'none';
+        if(headerImg) { headerImg.style.display = 'block'; headerImg.src = user.photoURL; }
+        
+        document.getElementById('logged-out-content').style.display = 'none';
+        document.getElementById('logged-in-content').style.display = 'block';
+        document.getElementById('user-img-box').src = user.photoURL;
+        document.getElementById('user-name-box').innerText = user.displayName;
+    } else {
+        if(defaultIcon) defaultIcon.style.display = 'block';
+        if(headerImg) headerImg.style.display = 'none';
+        document.getElementById('logged-out-content').style.display = 'block';
+        document.getElementById('logged-in-content').style.display = 'none';
     }
 }
 
-// ৩. কোর ফাংশনসমূহ (আগের কোডের উন্নত ভার্সন)
+// ৩. কোর ফাংশনসমূহ
 function initFilters() {
     const mSelect = document.getElementById('filter-month');
     const ySelect = document.getElementById('filter-year');
     const now = new Date();
+    if(!mSelect || !ySelect) return;
+    mSelect.innerHTML = ''; ySelect.innerHTML = '';
     monthsBN.forEach((m, i) => {
         let opt = new Option(m, i);
         if(i === now.getMonth()) opt.selected = true;
@@ -185,7 +219,6 @@ function exportData() {
     a.href = url;
     a.download = `asifio_backup_${new Date().toLocaleDateString()}.json`;
     a.click();
-    toggleDrawer();
 }
 
 function importData(event) {
@@ -228,8 +261,12 @@ function setupSwipe() {
 
 function render() {
     const list = document.getElementById('history-list');
-    const selM = parseInt(document.getElementById('filter-month').value);
-    const selY = parseInt(document.getElementById('filter-year').value);
+    const fMonth = document.getElementById('filter-month');
+    const fYear = document.getElementById('filter-year');
+    if(!list || !fMonth || !fYear) return;
+    
+    const selM = parseInt(fMonth.value);
+    const selY = parseInt(fYear.value);
     document.getElementById('history-title').innerText = "সাম্প্রতিক লেনদেন";
     list.innerHTML = '';
     let total = 0, inc = 0, exp = 0;
@@ -266,9 +303,8 @@ function saveAndRender() {
     localStorage.setItem('transactions', JSON.stringify(transactions));
     localStorage.setItem('trash', JSON.stringify(trash));
     
-    // ক্লাউডে অটো সেভ
     const user = auth.currentUser;
-    if (user) {
+    if (user && navigator.onLine) {
         db.ref("users/" + user.uid).set({
             transactions: transactions,
             trash: trash,
@@ -278,7 +314,17 @@ function saveAndRender() {
     render();
 }
 
-// ৪. ইনিশিয়েলাইজেশন
+// ৪. ইন্টারনেট সিঙ্ক ও ইনিশিয়েলাইজেশন
+window.addEventListener('online', () => {
+    if (auth.currentUser) saveAndRender();
+});
+
+document.addEventListener('click', (e) => {
+    const container = document.getElementById('auth-container');
+    const box = document.getElementById('auth-box');
+    if (container && !container.contains(e.target)) box.style.display = 'none';
+});
+
 window.onload = () => {
     initFilters();
     const savedName = localStorage.getItem('user-name') || "আসিফ ইকবাল";
@@ -288,10 +334,16 @@ window.onload = () => {
     updateThemeUI(isDark);
     if(localStorage.getItem('font-pref') === 'siliguri') toggleFont();
     
-    // লগইন স্টেট চেক
     auth.onAuthStateChanged(user => {
-        if (user) updateAuthUI(user);
+        if (user) {
+            updateAuthUI(user);
+            syncWithCloud(user);
+        } else {
+            updateAuthUI(null);
+            setTimeout(() => {
+                if(!auth.currentUser && confirm("আপনার ডাটা সংরক্ষিত রাখতে লগইন করুন।")) confirmLogin();
+            }, 3000);
+        }
     });
-    
     render();
 };

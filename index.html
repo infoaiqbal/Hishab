@@ -16,14 +16,6 @@
     <div id="drawer" class="drawer">
         <div class="drawer-header">আয় ব্যয় মেনু</div>
         
-        <div id="user-profile" style="padding: 10px; display: none; align-items: center; gap: 10px; margin-bottom: 10px; border-bottom: 1px solid rgba(128,128,128,0.1);">
-            <img id="user-photo" src="" style="width: 40px; height: 40px; border-radius: 50%;">
-            <div>
-                <div id="user-name-display" style="font-weight: bold; font-size: 0.9rem;"></div>
-                <button onclick="logout()" style="background: none; border: none; color: var(--expense); font-size: 0.7rem; padding: 0; cursor: pointer;">লগআউট</button>
-            </div>
-        </div>
-        <a id="login-btn" onclick="googleLogin()" style="background: var(--accent); color: white !important; border-radius: 10px; padding: 12px !important; margin: 10px; justify-content: center; font-weight: bold; cursor: pointer;">গুগল লগইন (সিঙ্ক)</a>
         <div class="drawer-options">
             <a onclick="toggleTheme();">
                 <span id="theme-icon-container"></span>
@@ -62,13 +54,37 @@
     <div id="overlay" onclick="toggleDrawer()"></div>
 
     <div class="app-container">
-        <div class="header">
-            <button class="menu-btn" onclick="toggleDrawer()">
-                <svg viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18" stroke="currentColor" stroke-linecap="round"/></svg>
-            </button>
-            <div class="user-name-area" onclick="openNameModal()">
-                <h3 id="display-name" style="margin:0; font-size:1.1rem;">আয় ব্যয় - লোডিং...</h3>
-                <svg class="edit-icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        <div class="header" style="display: flex; justify-content: space-between; align-items: center; position: relative;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <button class="menu-btn" onclick="toggleDrawer()">
+                    <svg viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18" stroke="currentColor" stroke-linecap="round"/></svg>
+                </button>
+                <div class="user-name-area" onclick="openNameModal()">
+                    <h3 id="display-name" style="margin:0; font-size:1.1rem;">আয় ব্যয় - লোডিং...</h3>
+                </div>
+            </div>
+
+            <div id="auth-container">
+                <div id="user-trigger" onclick="toggleAuthBox()" style="cursor: pointer; display: flex; align-items: center; justify-content: center; width: 35px; height: 35px;">
+                    <svg id="default-user-icon" class='line' viewBox='0 0 24 24' style="width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 1.5;">
+                        <path d='M12.12 12.78C12.05 12.77 11.96 12.77 11.88 12.78C10.12 12.72 8.71997 11.28 8.71997 9.50998C8.71997 7.69998 10.18 6.22998 12 6.22998C13.81 6.22998 15.28 7.69998 15.28 9.50998C15.27 11.28 13.88 12.72 12.12 12.78Z'></path>
+                        <path d='M18.74 19.3801C16.96 21.0101 14.6 22.0001 12 22.0001C9.40001 22.0001 7.04001 21.0101 5.26001 19.3801C5.36001 18.4401 5.96001 17.5201 7.03001 16.8001C9.77001 14.9801 14.25 14.9801 16.97 16.8001C18.04 17.5201 18.64 18.4401 18.74 19.3801Z'></path>
+                        <path d='M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z'></path>
+                    </svg>
+                    <img id="user-img-header" src="" style="display:none; width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--accent); object-fit: cover;">
+                </div>
+
+                <div id="auth-box" style="display: none; position: absolute; right: 0; top: 50px; width: 200px; background: var(--bg-card); border: 1px solid rgba(128,128,128,0.2); border-radius: 15px; padding: 15px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); z-index: 9999;">
+                    <div id="logged-out-content">
+                        <p style="font-size: 0.9rem; margin-bottom: 12px; color: var(--text);">লগ ইন করুন</p>
+                        <button onclick="confirmLogin()" style="width:100%; background:var(--accent); border:none; color:white; padding:10px; border-radius:10px; font-weight:bold; cursor: pointer;">লগইন</button>
+                    </div>
+                    <div id="logged-in-content" style="display: none;">
+                        <img id="user-img-box" src="" style="width: 55px; height: 55px; border-radius: 50%; border: 2px solid var(--accent); margin-bottom: 10px;">
+                        <p id="user-name-box" style="font-weight: bold; font-size: 0.95rem; margin: 5px 0; color: var(--text);"></p>
+                        <button onclick="logout()" style="width:100%; background:none; border: 1.5px solid var(--expense); color:var(--expense); padding:8px; border-radius:10px; font-size: 0.85rem; margin-top: 12px; font-weight: bold; cursor: pointer;">লগ আউট</button>
+                    </div>
+                </div>
             </div>
         </div>
 
