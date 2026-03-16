@@ -1,20 +1,29 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-    
-    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>আয় ব্যয় - Asifio</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
 
-    
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-database-compat.js"></script>
 </head>
 <body class="Dark-Asifio">
 
     <div id="drawer" class="drawer">
         <div class="drawer-header">আয় ব্যয় মেনু</div>
+        
+        <div id="user-profile" style="padding: 10px; display: none; align-items: center; gap: 10px; margin-bottom: 10px; border-bottom: 1px solid rgba(128,128,128,0.1);">
+            <img id="user-photo" src="" style="width: 40px; height: 40px; border-radius: 50%;">
+            <div>
+                <div id="user-name-display" style="font-weight: bold; font-size: 0.9rem;"></div>
+                <button onclick="logout()" style="background: none; border: none; color: var(--expense); font-size: 0.7rem; padding: 0; cursor: pointer;">লগআউট</button>
+            </div>
+        </div>
+        <a id="login-btn" onclick="googleLogin()" style="background: var(--accent); color: white !important; border-radius: 10px; padding: 12px !important; margin: 10px; justify-content: center; font-weight: bold; cursor: pointer;">গুগল লগইন (সিঙ্ক)</a>
         <div class="drawer-options">
             <a onclick="toggleTheme();">
                 <span id="theme-icon-container"></span>
@@ -116,13 +125,10 @@
     </div>
 
     <script src="script.js"></script>
-    
     <script>
-  if('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js');
-  }
-</script>
-
-    
+        if('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+    </script>
 </body>
 </html>

@@ -1,3 +1,17 @@
+// ১. প্রাথমিক সেটিংস ও ফায়ারবেস কনফিগ
+const firebaseConfig = {
+    apiKey: "AIzaSyCCts8zQixE0uGjjK0uUTaR_NnLrKeXthw",
+    authDomain: "app-aybay.firebaseapp.com",
+    projectId: "app-aybay",
+    storageBucket: "app-aybay.firebasestorage.app",
+    messagingSenderId: "464828082296",
+    appId: "1:464828082296:web:1af28015038f4d76ce658d"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
+
 const bengaliDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
 const monthsBN = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
 const toBengali = n => n.toString().replace(/\d/g, d => bengaliDigits[d]);
@@ -6,6 +20,49 @@ let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
 let trash = JSON.parse(localStorage.getItem('trash')) || [];
 let currentFilter = 'all';
 
+// ২. লগইন এবং সিঙ্ক্রোনাইজেশন লজিক
+function googleLogin() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).then((result) => {
+        syncWithCloud(result.user);
+    }).catch((error) => { alert("লগইন ব্যর্থ হয়েছে!"); });
+}
+
+function logout() {
+    if(confirm("লগআউট করতে চান?")) {
+        auth.signOut().then(() => { window.location.reload(); });
+    }
+}
+
+function syncWithCloud(user) {
+    if (!user) return;
+    const userRef = db.ref("users/" + user.uid);
+    
+    userRef.once("value", (snapshot) => {
+        if (snapshot.exists()) {
+            const cloudData = snapshot.val();
+            if (confirm("ক্লাউডে আপনার আগের হিসেব পাওয়া গেছে। সেটি কি লোড করবেন? (না করলে বর্তমান ডাটা ক্লাউডে সেভ হবে)")) {
+                transactions = cloudData.transactions || [];
+                trash = cloudData.trash || [];
+                saveAndRender();
+            }
+        }
+        updateAuthUI(user);
+    });
+}
+
+function updateAuthUI(user) {
+    const loginBtn = document.getElementById('login-btn');
+    const profile = document.getElementById('user-profile');
+    if (user) {
+        if(loginBtn) loginBtn.style.display = 'none';
+        if(profile) profile.style.display = 'flex';
+        document.getElementById('user-photo').src = user.photoURL;
+        document.getElementById('user-name-display').innerText = user.displayName;
+    }
+}
+
+// ৩. কোর ফাংশনসমূহ (আগের কোডের উন্নত ভার্সন)
 function initFilters() {
     const mSelect = document.getElementById('filter-month');
     const ySelect = document.getElementById('filter-year');
@@ -47,6 +104,7 @@ function toggleTheme() {
 function updateThemeUI(isDark) {
     const themeText = document.getElementById('theme-text');
     const themeIcon = document.getElementById('theme-icon-container');
+    if (!themeText || !themeIcon) return;
     if (isDark) {
         themeText.innerText = "লাইট মোড";
         themeIcon.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 18.5C15.5899 18.5 18.5 15.5899 18.5 12C18.5 8.41015 15.5899 5.5 12 5.5C8.41015 5.5 5.5 8.41015 5.5 12C5.5 15.5899 8.41015 18.5 12 18.5Z"></path><path d="M19.14 19.14L19.01 19.01M19.01 4.99L19.14 4.86L19.01 4.99ZM4.86 19.14L4.99 19.01L4.86 19.14ZM12 2.08V2V2.08ZM12 22V21.92V22ZM2.08 12H2H2.08ZM22 12H21.92H22ZM4.99 4.99L4.86 4.86L4.99 4.99Z"></path></svg>`;
@@ -207,9 +265,20 @@ function render() {
 function saveAndRender() {
     localStorage.setItem('transactions', JSON.stringify(transactions));
     localStorage.setItem('trash', JSON.stringify(trash));
+    
+    // ক্লাউডে অটো সেভ
+    const user = auth.currentUser;
+    if (user) {
+        db.ref("users/" + user.uid).set({
+            transactions: transactions,
+            trash: trash,
+            lastUpdated: Date.now()
+        });
+    }
     render();
 }
 
+// ৪. ইনিশিয়েলাইজেশন
 window.onload = () => {
     initFilters();
     const savedName = localStorage.getItem('user-name') || "আসিফ ইকবাল";
@@ -218,5 +287,11 @@ window.onload = () => {
     document.body.classList.toggle('Dark-Asifio', isDark);
     updateThemeUI(isDark);
     if(localStorage.getItem('font-pref') === 'siliguri') toggleFont();
+    
+    // লগইন স্টেট চেক
+    auth.onAuthStateChanged(user => {
+        if (user) updateAuthUI(user);
+    });
+    
     render();
 };
