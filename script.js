@@ -359,7 +359,6 @@ function saveAndRender() {
     render();
 }
 
-
 // ৫. ইন্টারনেট সিঙ্ক ও ইনিশিয়েলাইজেশন
 window.addEventListener('online', () => { if (auth.currentUser) saveAndRender(); });
 

@@ -1,20 +1,20 @@
-const cacheName = 'asifio-aybay-v2.3'; // ভার্সন আপডেট করলাম (Rongdhonu ফন্টসহ)
+const cacheName = 'asifio-aybay-v2.4'; // ভার্সন আপডেট করা হলো (লোগোসহ)
 const assets = [
   './',
   'index.html',
   'style.css',
   'script.js',
   'manifest.json',
+  'logo.png', // আপনার নতুন লোগোটি এখানে যুক্ত করা হলো
   'https://cdn.jsdelivr.net/gh/infoaiqbal/kalpurush@latest/style.css',
-  'https://cdn.jsdelivr.net/gh/infoaiqbal/Rongdhonu@latest/style.css', // নতুন ফন্ট যোগ করা হলো
-  'https://cdn-icons-png.flaticon.com/512/2344/2344132.png'
+  'https://cdn.jsdelivr.net/gh/infoaiqbal/Rongdhonu@latest/style.css'
 ];
 
 // ১. ফাইলগুলো সেভ করা (Install)
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(cacheName).then(cache => {
-      console.log('Asifio App: Caching all assets...');
+      console.log('Asifio App: Caching assets including logo...');
       return cache.addAll(assets);
     })
   );
@@ -37,18 +37,14 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   e.respondWith(
     caches.match(e.request).then(res => {
-      // ক্যাশ থাকলে সেটি দাও, না থাকলে নেটওয়ার্ক থেকে আনো
       return res || fetch(e.request).then(fetchRes => {
-        // নতুন ফাইল আসলে (যেমন ফায়ারবেস বা গুগল ফন্ট) সেগুলোও ক্যাশ করবে
         return caches.open(cacheName).then(cache => {
-          // শুধুমাত্র GET রিকোয়েস্ট এবং নির্দিষ্ট স্কিম ক্যাশ করবে (এরর এড়াতে)
           if (e.request.method === 'GET' && e.request.url.startsWith('http')) {
              cache.put(e.request.url, fetchRes.clone());
           }
           return fetchRes;
         });
       }).catch(() => {
-        // অফলাইনে থাকলে এবং ফাইল ক্যাশে না থাকলে index.html দেখাবে
         if (e.request.mode === 'navigate') {
           return caches.match('index.html');
         }
