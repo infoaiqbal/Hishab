@@ -19,15 +19,65 @@ const toBengali = n => n.toString().replace(/\d/g, d => bengaliDigits[d]);
 let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
 let trash = JSON.parse(localStorage.getItem('trash')) || [];
 let currentFilter = 'all';
+let deferredPrompt; 
 
-// ২. উন্নত লগইন ও সিঙ্ক্রোনাইজেশন লজিক
+// ২. PWA ইন্সটল পপ-আপ ও বাটন লজিক (তাত্ক্ষণিক)
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+
+    // যদি অ্যাপটি standalone মোডে না থাকে (অর্থাৎ ব্রাউজারে থাকে)
+    if (!window.matchMedia('(display-mode: standalone)').matches) {
+        // সাথে সাথে পপ-আপ দেখাবে
+        const modal = document.getElementById('install-modal');
+        if(modal) modal.style.display = 'flex';
+        
+        // হেডার ও ড্রয়ারের বাটনগুলো দেখাবে
+        const hBtn = document.getElementById('install-header-btn');
+        const dBtn = document.getElementById('install-area-drawer');
+        if(hBtn) hBtn.style.display = 'block';
+        if(dBtn) dBtn.style.display = 'block';
+    }
+});
+
+async function triggerInstall() {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+            closeInstallModal();
+        }
+        deferredPrompt = null;
+    }
+}
+
+function closeInstallModal() {
+    const modal = document.getElementById('install-modal');
+    if(modal) modal.style.display = 'none';
+}
+
+function hideInstallButtons() {
+    const ids = ['install-modal', 'install-header-btn', 'install-area-drawer'];
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.style.display = 'none';
+    });
+}
+
+window.addEventListener('appinstalled', () => {
+    hideInstallButtons();
+    deferredPrompt = null;
+});
+
+// ৩. লগইন ও সিঙ্ক্রোনাইজেশন লজিক
 function toggleAuthBox() {
     const box = document.getElementById('auth-box');
     box.style.display = box.style.display === 'none' ? 'block' : 'none';
 }
 
 function confirmLogin() {
-    const choice = confirm("লগইন করলে আপনার তথ্য অনলাইনে সিঙ্ক হবে। যদি অনলাইনে আগে থেকে অন্য ডাটা থাকে তবে আপনার বর্তমান ডাটা হারাতে পারেন।\n\nসুরক্ষার জন্য ব্যাকআপ নিতে চান? (নিব = OK, নিব না = Cancel)");
+    // পপ-আপ থাকাকালীন যেন লগইন কনফার্মেশন ঝামেলা না করে, তাই কিছুটা সময় দেওয়া
+    const choice = confirm("লগইন করলে আপনার তথ্য অনলাইনে সিঙ্ক হবে। সুরক্ষার জন্য ব্যাকআপ নিতে চান?");
     if (choice) {
         exportData();
         setTimeout(() => googleLogin(), 2000);
@@ -45,7 +95,7 @@ function googleLogin() {
 }
 
 function logout() {
-    if(confirm("লগআউট করতে চান? লগআউট করলে ফোন থেকে বর্তমান ডাটা মুছে যাবে।")) {
+    if(confirm("লগআউট করলে ফোন থেকে বর্তমান ডাটা মুছে যাবে। নিশ্চিত?")) {
         auth.signOut().then(() => {
             localStorage.clear();
             transactions = [];
@@ -61,13 +111,13 @@ function syncWithCloud(user) {
     userRef.once("value", (snapshot) => {
         if (snapshot.exists()) {
             const cloudData = snapshot.val();
-            if (confirm("ক্লাউডে আপনার আগের হিসেব পাওয়া গেছে। সেটি কি লোড করবেন? (না করলে বর্তমান ডাটা ক্লাউডে সেভ হবে)")) {
+            if (confirm("আগের অনলাইন ডাটা কি লোড করবেন? (না করলে বর্তমান ডাটা অনলাইনে সেভ হবে)")) {
                 transactions = cloudData.transactions || [];
                 trash = cloudData.trash || [];
                 saveAndRender();
             }
         } else {
-            saveAndRender(); // নতুন ইউজার হলে বর্তমান ডাটা ক্লাউডে যাবে
+            saveAndRender();
         }
         updateAuthUI(user);
     });
@@ -76,12 +126,10 @@ function syncWithCloud(user) {
 function updateAuthUI(user) {
     const defaultIcon = document.getElementById('default-user-icon');
     const headerImg = document.getElementById('user-img-header');
-    const authBox = document.getElementById('auth-box');
     
     if (user) {
         if(defaultIcon) defaultIcon.style.display = 'none';
         if(headerImg) { headerImg.style.display = 'block'; headerImg.src = user.photoURL; }
-        
         document.getElementById('logged-out-content').style.display = 'none';
         document.getElementById('logged-in-content').style.display = 'block';
         document.getElementById('user-img-box').src = user.photoURL;
@@ -94,7 +142,7 @@ function updateAuthUI(user) {
     }
 }
 
-// ৩. কোর ফাংশনসমূহ
+// ৪. কোর ফাংশনসমূহ (UI & Actions)
 function initFilters() {
     const mSelect = document.getElementById('filter-month');
     const ySelect = document.getElementById('filter-year');
@@ -141,10 +189,10 @@ function updateThemeUI(isDark) {
     if (!themeText || !themeIcon) return;
     if (isDark) {
         themeText.innerText = "লাইট মোড";
-        themeIcon.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 18.5C15.5899 18.5 18.5 15.5899 18.5 12C18.5 8.41015 15.5899 5.5 12 5.5C8.41015 5.5 5.5 8.41015 5.5 12C5.5 15.5899 8.41015 18.5 12 18.5Z"></path><path d="M19.14 19.14L19.01 19.01M19.01 4.99L19.14 4.86L19.01 4.99ZM4.86 19.14L4.99 19.01L4.86 19.14ZM12 2.08V2V2.08ZM12 22V21.92V22ZM2.08 12H2H2.08ZM22 12H21.92H22ZM4.99 4.99L4.86 4.86L4.99 4.99Z"></path></svg>`;
+        themeIcon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
     } else {
         themeText.innerText = "ডার্ক মোড";
-        themeIcon.innerHTML = `<svg viewBox="0 0 24 24"><path d="M2.03009 12.42C2.39009 17.57 6.76009 21.76 11.9901 21.99C15.6801 22.15 18.9801 20.43 20.9601 17.72C21.7801 16.61 21.3401 15.87 19.9701 16.12C19.3001 16.24 18.6101 16.29 17.8901 16.26C13.0001 16.06 9.00009 11.97 8.98009 7.13996C8.97009 5.83996 9.24009 4.60996 9.73009 3.48996C10.2701 2.24996 9.62009 1.65996 8.37009 2.18996C4.41009 3.85996 1.70009 7.84996 2.03009 12.42Z"></path></svg>`;
+        themeIcon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
     }
 }
 
@@ -198,10 +246,9 @@ function showTrash() {
     list.innerHTML = trash.length ? '' : '<p style="text-align:center; opacity:0.5; padding:20px;">বিন খালি!</p>';
     trash.slice().reverse().forEach(t => {
         const li = document.createElement('li');
-        li.style.borderLeft = "4px solid #888";
         li.innerHTML = `<div><b>${t.reason}</b><br><small>৳ ${toBengali(Math.abs(t.amount))}</small></div>
-        <div style="text-align:right"><button onclick="restoreFromTrash(${t.id})" style="color:var(--income); border:none; background:none; font-size:0.8rem; cursor:pointer;">ফিরিয়ে আনুন</button><br>
-        <button onclick="permanentDelete(${t.id})" style="color:var(--expense); border:none; background:none; font-size:0.8rem; cursor:pointer;">মুছুন</button></div>`;
+        <div style="text-align:right"><button onclick="restoreFromTrash(${t.id})" style="color:var(--income); border:none; background:none; cursor:pointer;">ফিরিয়ে আনুন</button><br>
+        <button onclick="permanentDelete(${t.id})" style="color:var(--expense); border:none; background:none; cursor:pointer;">মুছুন</button></div>`;
         list.appendChild(li);
     });
     const backBtn = document.createElement('button');
@@ -228,15 +275,15 @@ function importData(event) {
     reader.onload = function(e) {
         try {
             const imported = JSON.parse(e.target.result);
-            if (confirm("বর্তমান তথ্য মুছে নতুন তথ্য রিস্টোর করবেন?")) {
+            if (confirm("সব তথ্য রিস্টোর করবেন?")) {
                 transactions = imported.transactions || [];
                 trash = imported.trash || [];
                 if(imported.userName) localStorage.setItem('user-name', imported.userName);
                 saveAndRender();
-                alert("রিস্টোর সফল হয়েছে!");
+                alert("রিস্টোর সফল!");
                 window.location.reload();
             }
-        } catch (err) { alert("ভুল ফাইল সিলেক্ট করেছেন!"); }
+        } catch (err) { alert("ভুল ফাইল!"); }
     };
     reader.readAsText(file);
 }
@@ -306,23 +353,20 @@ function saveAndRender() {
     const user = auth.currentUser;
     if (user && navigator.onLine) {
         db.ref("users/" + user.uid).set({
-            transactions: transactions,
-            trash: trash,
-            lastUpdated: Date.now()
+            transactions: transactions, trash: trash, lastUpdated: Date.now()
         });
     }
     render();
 }
 
-// ৪. ইন্টারনেট সিঙ্ক ও ইনিশিয়েলাইজেশন
-window.addEventListener('online', () => {
-    if (auth.currentUser) saveAndRender();
-});
+
+// ৫. ইন্টারনেট সিঙ্ক ও ইনিশিয়েলাইজেশন
+window.addEventListener('online', () => { if (auth.currentUser) saveAndRender(); });
 
 document.addEventListener('click', (e) => {
-    const container = document.getElementById('auth-container');
     const box = document.getElementById('auth-box');
-    if (container && !container.contains(e.target)) box.style.display = 'none';
+    const trigger = document.getElementById('user-trigger');
+    if (box && trigger && !box.contains(e.target) && !trigger.contains(e.target)) box.style.display = 'none';
 });
 
 window.onload = () => {
@@ -332,7 +376,7 @@ window.onload = () => {
     const isDark = (localStorage.getItem('theme') || 'dark') === 'dark';
     document.body.classList.toggle('Dark-Asifio', isDark);
     updateThemeUI(isDark);
-    if(localStorage.getItem('font-pref') === 'siliguri') toggleFont();
+    if(localStorage.getItem('font-pref') === 'siliguri') document.body.classList.add('font-siliguri');
     
     auth.onAuthStateChanged(user => {
         if (user) {
@@ -340,10 +384,14 @@ window.onload = () => {
             syncWithCloud(user);
         } else {
             updateAuthUI(null);
+            // যদি ইউজার ব্রাউজারে থাকে এবং পপ-আপ আসে, তবে লগইন পপ-আপকে ৩ সেকেন্ড দেরি করানো
             setTimeout(() => {
-                if(!auth.currentUser && confirm("আপনার ডাটা সংরক্ষিত রাখতে লগইন করুন।")) confirmLogin();
-            }, 3000);
+                if(!auth.currentUser && !window.matchMedia('(display-mode: standalone)').matches) {
+                   // confirmLogin(); // অটো লগইন পপআপ অপশনাল রাখতে পারেন
+                }
+            }, 5000);
         }
     });
     render();
 };
+            
