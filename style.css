@@ -1,5 +1,7 @@
 @import url('https://cdn.jsdelivr.net/gh/infoaiqbal/kalpurush@latest/style.css');
 @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600&display=swap');
+/* নতুন রংধনু ফন্ট ইম্পোর্ট */
+@import url('https://cdn.jsdelivr.net/gh/infoaiqbal/Rongdhonu@latest/style.css');
 
 :root {
     --bg: #f8f9fa;
@@ -34,6 +36,32 @@ body {
     overflow-x: hidden;
 }
 
+/* Rongdhonu ফন্ট অ্যাপ্লাই */
+#install-modal h2, 
+#install-modal button,
+.rongdhonu-font {
+    font-family: 'Rongdhonu', sans-serif !important;
+}
+
+/* অ্যাপের ভেতর (Standalone Mode) ইন্সটল অপশন হাইড রাখা */
+@media all and (display-mode: standalone) {
+    #install-modal, #install-header-btn, #install-area-drawer {
+        display: none !important;
+    }
+}
+
+/* এনিমেশনসমূহ */
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+    40% {transform: translateY(-10px);}
+    60% {transform: translateY(-5px);}
+}
+
+@keyframes fadeInScale {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
 .font-siliguri { font-family: 'Hind Siliguri', sans-serif !important; }
 
 .app-container { 
@@ -48,7 +76,16 @@ body {
 .menu-btn svg { width: 26px; height: 26px; stroke: currentColor; stroke-width: 2.5; fill: none; }
 
 .user-name-area { display: flex; align-items: center; gap: 8px; cursor: pointer; }
-.edit-icon { width: 16px; height: 16px; stroke: var(--accent); fill: none; stroke-width: 2.5; }
+
+/* ইন্সটল বাটন স্টাইল */
+#install-header-btn {
+    animation: bounce 3s infinite;
+}
+
+#install-btn-drawer:active {
+    transform: scale(0.95);
+    transition: 0.2s;
+}
 
 /* Auth Header Styles */
 #auth-container { position: relative; }
@@ -62,6 +99,11 @@ body {
 @keyframes slideDown {
     from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+/* পপ-আপ কন্টেন্ট এনিমেশন */
+#install-modal .modal-content {
+    animation: fadeInScale 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .balance-card {
@@ -116,12 +158,12 @@ li {
 }
 .item-in { border-left: 4px solid var(--income); }
 .item-out { border-left: 4px solid var(--expense); }
-
 .fab {
     position: fixed; right: var(--side-margin); bottom: 25px;
     width: 55px; height: 55px; background: var(--accent); color: white;
     border: none; border-radius: 50%; font-size: 28px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); z-index: 100;
 }
+
 
 .modal {
     display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
