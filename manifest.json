@@ -2,7 +2,8 @@
   "name": "আয় ব্যয় - Asifio",
   "short_name": "আয় ব্যয়",
   "description": "আপনার দৈনন্দিন আয় ও ব্যয়ের হিসাব রাখার সহজ ও নিরাপদ মাধ্যম।",
-  "start_url": "index.html",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#000000",
@@ -13,7 +14,7 @@
       "src": "logo.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "maskable"
     },
     {
       "src": "logo.png",

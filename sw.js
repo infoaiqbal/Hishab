@@ -1,11 +1,11 @@
-const cacheName = 'asifio-aybay-v2.4'; // ভার্সন আপডেট করা হলো (লোগোসহ)
+const cacheName = 'asifio-aybay-v2.5'; // ভার্সন আপডেট করা হলো (Manifest Sync-এর জন্য)
 const assets = [
   './',
   'index.html',
   'style.css',
   'script.js',
   'manifest.json',
-  'logo.png', // আপনার নতুন লোগোটি এখানে যুক্ত করা হলো
+  'logo.png',
   'https://cdn.jsdelivr.net/gh/infoaiqbal/kalpurush@latest/style.css',
   'https://cdn.jsdelivr.net/gh/infoaiqbal/Rongdhonu@latest/style.css'
 ];
@@ -14,7 +14,7 @@ const assets = [
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(cacheName).then(cache => {
-      console.log('Asifio App: Caching assets including logo...');
+      console.log('Asifio App: Caching latest assets...');
       return cache.addAll(assets);
     })
   );
@@ -39,6 +39,7 @@ self.addEventListener('fetch', e => {
     caches.match(e.request).then(res => {
       return res || fetch(e.request).then(fetchRes => {
         return caches.open(cacheName).then(cache => {
+          // রিকোয়েস্ট সফল হলে এবং সেটি GET হলে ক্যাশ করবে
           if (e.request.method === 'GET' && e.request.url.startsWith('http')) {
              cache.put(e.request.url, fetchRes.clone());
           }
